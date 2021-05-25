@@ -5,6 +5,12 @@
 - 4.网上他人编译的rpm包所依赖的OpenSSL不一定是1.0.2k，所以rpm -Uvh 升级openssh可能会出现ssh -V和openssl version显示OpenSSL版本不一致的情况
 ```
 #!/bin/sh
+#root权限操作此脚本
+#备份ssh:
+mv /etc/ssh /etc/sshbak
+mv /usr/bin/ssh /usr/bin/sshbak
+mv /usr/sbin/sshd /usr/sbin/sshdbak
+mv /etc/pam.d/sshd /etc/pam.d/sshdbak
 #yilai和gcc为离线rpm包目录
 yum localinstall -y  yilai/pam* --skip-broken
 cd gcc
@@ -22,7 +28,6 @@ chmod 600 /etc/ssh/ssh_host_rsa_key /etc/ssh/ssh_host_ecdsa_key /etc/ssh/ssh_hos
 sed -i 's/GSSAPIAuthentication no/#GSSAPIAuthentication no/' /etc/ssh/sshd_config
 sed -i 's/GSSAPICleanupCredentials no/#GSSAPICleanupCredentials no/' /etc/ssh/sshd_config
 sed -i '/PermitRootLogin no/d' /etc/ssh/sshd_config
-mv /etc/pam.d/sshd /etc/pam.d/sshd.bak
 #下面的/etc/pam.d/sshd 如果不修改，那/etc/ssh/sshd_config里的UsePam yes得改为no或者删除，不然密码无法登陆。
 cat >/etc/pam.d/sshd <<EOF
 #%PAM-1.0
