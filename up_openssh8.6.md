@@ -23,7 +23,7 @@ sed -i 's/GSSAPIAuthentication no/#GSSAPIAuthentication no/' /etc/ssh/sshd_confi
 sed -i 's/GSSAPICleanupCredentials no/#GSSAPICleanupCredentials no/' /etc/ssh/sshd_config
 sed -i '/PermitRootLogin no/d' /etc/ssh/sshd_config
 mv /etc/pam.d/sshd /etc/pam.d/sshd.bak
-#如果编译时不选--with-pam，则下面的/etc/pam.d/sshd 可以不修改，但是/etc/ssh/sshd_config里的UsePam yes得改为no或者删除，不然密码无法登陆。
+#下面的/etc/pam.d/sshd 如果不修改，那/etc/ssh/sshd_config里的UsePam yes得改为no或者删除，不然密码无法登陆。
 cat >/etc/pam.d/sshd <<EOF
 #%PAM-1.0
 auth       required     pam_sepermit.so
