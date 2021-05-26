@@ -5,6 +5,19 @@
 - 4.如果系统版本为centOS7.\*，但是Openssh为7.\*，需要在make和make install直接加一句卸载7.\*。  
 不过虽然服务总体看着正常，但有一点bug:使用restart会有Can't open PID file /var/run/sshd.pid (yet?) after start: No such file or directory的报错，不影响服务，先stop再start则不会有此报错。[Redhat关于此bug的链接](https://bugzilla.redhat.com/show_bug.cgi?id=1381997)
 - 5.网上他人编译的rpm包所依赖的OpenSSL不一定是1.0.2k，所以rpm -Uvh 升级openssh可能会出现ssh -V和openssl version显示OpenSSL版本不一致的情况
+- 6.openssh7.\*升级至8.\*另一个办法，来自网友
+```
+[root@localhost ~]# cd /usr/lib/systemd/system 
+[root@localhost system]# mv sshd.service sshd.service.bak  
+[root@localhost system]# systemctl daemon-reload   
+
+# 重启前执行
+1、sshd -t 检查下配置有没有问题
+2、/var/log/message里sshd有没有继续报错
+
+# 以上正常后重启
+systemctl restart sshd
+```
 ```
 #!/bin/sh
 #root权限操作此脚本
@@ -23,8 +36,8 @@ cd  openssh-8.6p1
 ./configure --prefix=/usr --sysconfdir=/etc/ssh --with-zlib --without-openssl-header-check --with-ssl-dir=/usr/local --with-privsep-path=/var/lib/sshd --with-pam
 make
 #如果openssh初始为7.*，需要卸载，不然sshd无法正常启动。
-rpm -qa|grep openssh|grep openssh-7.
-[[ $? -eq 0 ]]&&rpm -e --nodeps `rpm -qa | grep openssh`
+#rpm -qa|grep openssh|grep openssh-7.
+#[[ $? -eq 0 ]]&&rpm -e --nodeps `rpm -qa | grep openssh`
 make install
 echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
 cp -a contrib/redhat/sshd.init /etc/init.d/sshd
