@@ -1,3 +1,4 @@
+.*
 *tar.gz
 *rpm
 !openssh-8.6p1-rpm.tar.gz
