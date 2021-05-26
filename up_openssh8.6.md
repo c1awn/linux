@@ -1,7 +1,8 @@
 此脚本为离线环境准备
 - 1.下载openssh8.6源码包，[镜像地址](https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/)
 - 2.yum downloadonly下载pam-devel以及依赖，gcc以及依赖。
-- 3.OpenSSL版本为1.0.2k,系统版本为centOS7.*
+- 3.本地验证环境：Openssh为8.*，OpenSSL版本为1.0.2k,系统版本为centOS7.*
+- 4.如果系统版本为centOS7.*，但是Openssh为7.*，需要在make和make install直接加一句卸载7.*。虽然服务总体看着正常，有一点bug:如果使用restart会有Can't open PID file /var/run/sshd.pid (yet?) after start: No such file or directory的报错，不影响服务，先stop再start则不会有此报错。[Redhat关于此bug的链接](https://bugzilla.redhat.com/show_bug.cgi?id=1381997)
 - 4.网上他人编译的rpm包所依赖的OpenSSL不一定是1.0.2k，所以rpm -Uvh 升级openssh可能会出现ssh -V和openssl version显示OpenSSL版本不一致的情况
 ```
 #!/bin/sh
@@ -19,7 +20,11 @@ cd ../
 [[ ! -d openssh-8.6p1 ]]&& tar -zxvf openssh-8.6p1.tar.gz
 cd  openssh-8.6p1
 ./configure --prefix=/usr --sysconfdir=/etc/ssh --with-zlib --without-openssl-header-check --with-ssl-dir=/usr/local --with-privsep-path=/var/lib/sshd --with-pam
-make&&make install
+make
+#如果openssh初始为7.*，需要卸载，不然sshd无法正常启动。
+rpm -qa|grep openssh|grep openssh-7.
+[[ $? -eq 0 ]]&&rpm -e --nodeps `rpm -qa | grep openssh`
+make install
 echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
 cp -a contrib/redhat/sshd.init /etc/init.d/sshd
 cp -a contrib/redhat/sshd.pam /etc/pam.d/sshd.pam
