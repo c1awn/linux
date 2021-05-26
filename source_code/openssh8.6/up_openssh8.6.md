@@ -5,7 +5,7 @@
 - 4.如果系统版本为centOS7.\*，但是Openssh为7.\*，需要在make和make install直接加一句卸载7.\*。  
 不过虽然服务总体看着正常，但有一点bug:使用restart会有Can't open PID file /var/run/sshd.pid (yet?) after start: No such file or directory的报错，不影响服务，先stop再start则不会有此报错。[Redhat关于此bug的链接](https://bugzilla.redhat.com/show_bug.cgi?id=1381997)
 - 5.网上他人编译的rpm包所依赖的OpenSSL不一定是1.0.2k，所以rpm -Uvh 升级openssh可能会出现ssh -V和openssl version显示OpenSSL版本不一致的情况
-- 6.openssh7.\*升级至8.\*另一个办法，来自网友
+- 6.openssh7.\*升级至8.\*出现bug的另一个办法，来自网友
 ```
 [root@localhost ~]# cd /usr/lib/systemd/system 
 [root@localhost system]# mv sshd.service sshd.service.bak  
