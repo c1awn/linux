@@ -1,0 +1,111 @@
+#!/bin/bash
+#
+# chkconfig: 2345 75 50    默认级别    启动级别    关闭级别
+# description: lightweight ssh2 implementation
+#
+[ -r /etc/rc.d/init.d/functions ] && . /etc/rc.d/init.d/functions
+
+[ -f /etc/sysconfig/dropbear ] && . /etc/sysconfig/dropbear
+
+dsskey=/etc/dropbear/dropbear_dss_host_key
+rsakey=/etc/dropbear/dropbear_rsa_host_key
+
+pidfile=/var/run/dropbear.pid
+lockfile=/var/lock/subsys/dropbear
+
+dropbearkey=/usr/local/bin/dropbearkey
+dropbear=/usr/local/sbin/dropbear
+
+port=${port:=22}
+
+gendsskey() {
+    if [ ! -f $dsskey ]; then
+        $dropbearkey -t dss -f $dsskey &> /dev/null
+        [ $? -eq 0 ] && return 0 || return 1
+    RETVAL=$?
+    if [ $RETVAL -eq 0 ]; then
+        echo -n "Generate dss key finished."
+        passed
+        echo
+        return 0
+    else
+        echo -n "Genrate dss key failed"
+        failure
+        echo
+        exit 6
+    fi
+    else
+        return 0
+    fi
+}
+genrsakey() {
+    if [ ! -f $rsakey ]; then
+        $dropbearkey -t rsa -f $rsakey -s 2048 &> /dev/null
+    #   [ $? -eq 0 ] && return 0 || return 1        #这行不需要了
+    RETVAL=$?
+    if [ $RETVAL -eq 0 ]; then
+        echo -n "Generate rsa key finished."
+        passed
+        echo
+        return 0
+    else
+        echo -n "Genrate rsa key failed"
+        failure
+        echo
+        exit 6
+    fi
+    else
+        return 0
+    fi
+}
+start() {
+    gendsskey
+    genrsakey 
+    
+    if [ -f $lockfile ]; then
+        echo -n "dropbear is already running."
+        failure
+        echo
+        exit 7
+    fi
+    
+    echo -n "Start dropbear"
+    daemon --pidfile $pidfile $dropbear -p $port
+    RETVAL=$?
+    echo 
+    
+    if [ $RETVAL -eq 0 ];then
+        touch $lockfile
+        return 0
+    else
+        rm -f $lockfile $pidfile
+        return 1
+    fi
+}
+stop() {
+    if [ ! -f $lockfile ]; then
+        echo -n "dropbear is not running."
+        failure
+        echo
+        exit 8
+    fi
+    
+    echo -n "Stop dropbear:"
+    killproc dropbear
+    RETVAL=$?
+    echo
+    
+    [ $RETVAL -eq 0 ] && rm -f $lockfile && return 0 || return 1
+}
+
+case $1 in 
+start)
+    start ;;
+stop)
+    stop;;
+restart)
+    stop 
+    start ;;
+*) 
+    exit 3 ;;
+esac
